@@ -1,0 +1,63 @@
+# Oh My OpenCode Configuration for Py Code Agent
+# Third-party plugin: py-code-agent-omo
+#
+# Copy to ~/.config/py-code-agent/omo.yaml or .py-code-agent/omo.yaml
+
+# ── Intent Gate ──
+intent_gate:
+  enabled: true
+  model: "openai/gpt-5.4-mini"
+  threshold: 0.7
+
+# ── Category Router ──
+category_router:
+  enabled: true
+  categories:
+    visual-engineering:
+      model: "google/gemini-3.1-pro"
+      variant: "high"
+    ultrabrain:
+      model: "openai/gpt-5.4"
+      variant: "xhigh"
+    deep:
+      model: "anthropic/claude-opus-4-6"
+    quick:
+      model: "openai/gpt-5.4-mini"
+    artistry:
+      model: "anthropic/claude-sonnet-4.6"
+    unspecified-high:
+      model: "anthropic/claude-opus-4-6"
+    unspecified-low:
+      model: "openai/gpt-5.4-mini"
+    writing:
+      model: "anthropic/claude-sonnet-4.6"
+  agents:
+    oracle:
+      model: "openai/gpt-5.4"
+      variant: "high"
+    librarian:
+      model: "anthropic/claude-sonnet-4.6"
+    explore:
+      model: "xai/grok-code-fast-1"
+    frontend-engineer:
+      model: "google/gemini-3.1-pro"
+  provider_fallbacks:
+    anthropic: ["openai", "google"]
+    openai: ["anthropic", "google"]
+    google: ["anthropic", "openai"]
+
+# ── Sub-Agent Execution ──
+subagent:
+  enabled: true
+  max_concurrent: 4
+  default_timeout: 300
+
+# ── Discipline ──
+discipline:
+  enabled: true
+  ralph_loop:
+    enabled: true
+    max_iterations: 10
+  comment_checker:
+    enabled: true
+    max_comment_ratio: 0.15

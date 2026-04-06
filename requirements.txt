@@ -1,0 +1,39 @@
+# Pi Code Agent Python - Dependencies
+# LLM Integration
+litellm>=1.0.0  # Unified LLM API for 100+ providers
+
+# CLI and UI
+rich>=13.0.0  # Rich text and beautiful formatting
+textual>=0.41.0  # TUI framework
+click>=8.0.0  # CLI framework
+
+# Data Validation
+pydantic>=2.0.0  # Data validation using Python type hints
+pydantic-settings>=2.0.0  # Settings management
+
+# HTTP and API
+httpx>=0.25.0  # Async HTTP client
+aiohttp>=3.9.0  # Async HTTP client/server
+
+# Plugin System
+pluggy>=1.3.0  # Plugin system
+
+# File and Code Handling
+aiofiles>=23.0.0  # Async file operations
+tree-sitter>=0.20.0  # Parsing library
+pyyaml>=6.0.0  # YAML parsing
+
+# Utilities
+python-dotenv>=1.0.0  # Environment variables
+tenacity>=8.2.0  # Retry utilities
+orjson>=3.9.0  # Fast JSON parsing
+watchdog>=3.0.0  # File system monitoring
+
+# Development and Testing (optional)
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-cov>=4.1.0
+black>=23.0.0
+ruff>=0.1.0
+mypy>=1.7.0
+pre-commit>=3.5.0

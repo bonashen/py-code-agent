@@ -1,0 +1,76 @@
+# Py Code Agent Configuration
+# 
+# This file supports environment variable substitution using ${VAR_NAME} syntax.
+# Environment variables are loaded from:
+# 1. System environment variables
+# 2. .env file in the current directory or parent directories
+#
+# Example .env file:
+# PY_LLM_API_KEY=your-api-key
+# PY_LLM_MODEL=Qwen3-32B
+
+llm:
+  # API Configuration
+  provider: ${PY_LLM_PROVIDER:-openai}
+  model: ${PY_LLM_MODEL:-Qwen3-32B}
+  api_key: ${PY_LLM_API_KEY}
+  base_url: ${PY_LLM_BASE_URL:-http://one-api.v.csgjs.com/v1}
+  timeout: 300
+  max_retries: ${PY_LLM_MAX_RETRIES:-3}
+  temperature: ${PY_LLM_TEMPERATURE:-0.7}
+  max_tokens: ${PY_LLM_MAX_TOKENS:-4000}
+  # Debug mode - enables litellm._turn_on_debug() for detailed API logging
+  debug: ${PY_LLM_DEBUG:-false}
+  verbose: ${PY_LLM_VERBOSE:-false}
+
+tools:
+  enabled:
+    - read_file
+    - write_file
+    - execute_bash
+  timeout: ${PY_TOOLS_TIMEOUT:-30}
+  allow_bash: ${PY_TOOLS_ALLOW_BASH:-true}
+  allow_file_write: ${PY_TOOLS_ALLOW_FILE_WRITE:-true}
+  allowed_paths:
+    - ./
+    - ./docs/
+    - /home/bona/.claude/skills
+    - /tmp
+  blocked_paths:
+    - ~/.ssh
+    - ~/.aws
+
+ui:
+  theme: ${PY_UI_THEME:-dark}
+  show_tool_calls: ${PY_UI_SHOW_TOOL_CALLS:-true}
+  show_thinking: ${PY_UI_SHOW_THINKING:-false}
+  stream_output: ${PY_UI_STREAM_OUTPUT:-true}
+  auto_suggest: ${PY_UI_AUTO_SUGGEST:-true}
+  history_size: ${PY_UI_HISTORY_SIZE:-1000}
+
+plugins:
+  enabled:
+    - file:log
+    - file:soul
+    - file:agent_identity
+    - file:skills
+    - file:plan
+    - file:heartbeat
+    - file:context
+  disabled: []
+
+heartbeat:
+  enabled: ${PY_HEARTBEAT_ENABLED:-true}
+  interval: ${PY_HEARTBEAT_INTERVAL:-30}
+  timeout: ${PY_HEARTBEAT_TIMEOUT:-90}
+
+react:
+  enabled: ${PY_REACT_ENABLED:-true}
+  max_turns: ${PY_REACT_MAX_TURNS:-50}
+
+channels:
+  web:
+    host: ${PY_CHANNEL_WEB_HOST:-0.0.0.0}
+    port: ${PY_CHANNEL_WEB_PORT:-8080}
+    api_keys: []
+    require_auth: ${PY_CHANNEL_WEB_REQUIRE_AUTH:-false}

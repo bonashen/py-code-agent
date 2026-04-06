@@ -1,0 +1,37 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-code-agent-mcp-gateway"
+version = "0.1.0"
+description = "MCP Gateway plugin for Py Code Agent - connect MCP servers and expose their tools"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Py Code Agent Team", email = "team@pycodeagent.dev"}
+]
+keywords = ["py-code-agent", "plugin", "mcp", "model-context-protocol"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = []
+
+[project.optional-dependencies]
+mcp = [
+    "mcp>=1.0.0",
+]
+
+[project.entry-points."py_code_agent.plugins"]
+mcp_gateway = "py_code_agent_mcp_gateway.plugin:MCPGatewayPlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["py_code_agent_mcp_gateway"]

@@ -1,0 +1,32 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "py-code-agent-git"
+version = "0.1.0"
+description = "Git plugin for Py Code Agent - provides git status and repository information tools"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {text = "MIT"}
+authors = [
+    {name = "Py Code Agent Team", email = "team@pycodeagent.dev"}
+]
+keywords = ["py-code-agent", "plugin", "git", "version-control"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = []
+
+[project.entry-points."py_code_agent.plugins"]
+git = "py_code_agent_git.plugin:GitStatusPlugin"
+
+[tool.hatch.build.targets.wheel]
+packages = ["py_code_agent_git"]
