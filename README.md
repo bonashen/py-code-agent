@@ -7,13 +7,17 @@ AI coding assistant with ReAct reasoning, pluggable architecture, and 5-layer se
 - **🤖 Multi-LLM Support**: 100+ providers via **LiteLLM** (OpenAI, Anthropic, Azure, Ollama, etc.)
 - **🧠 ReAct Reasoning**: Thought → Action → Observation loop for autonomous task execution
 - **🔌 Plugin System**: pluggy-based extensible architecture with **5-layer self-healing**
-- **🌐 Channel System**: CLI, WebSocket, and pluggable transport channels
+  - **30+ Hook Events**: Message streaming, tool execution flow, session tree operations, model switching
+  - **Extension APIs**: Register commands, shortcuts, CLI flags, UI components, custom providers
+- **🌐 Channel System**: CLI, WebSocket, JSON, RPC, and pluggable transport channels
 - **🧩 Skills System**: Claude Code-compatible skill loading from `SKILL.md` files
 - **🔗 MCP Gateway**: Connect to 10,000+ tools via Model Context Protocol servers
 - **🤝 A2A Protocol**: Agent-to-agent communication via A2A v0.3.0
 - **📦 Package Management**: npm-like plugin install/enable/disable/search via CLI
 - **🛡️ Error Enhancement**: intelligent error classification with automatic fix suggestions
 - **✅ Task Verification**: `task_done` verifies actual file output against expected results
+- **🌳 Session Tree**: Branch/fork sessions, navigate conversation history with `/tree`, `/fork`, `/switch`
+- **💰 Cost Tracking**: Real-time token usage and cost estimation per request
 
 ## 📦 Installation
 
@@ -77,10 +81,29 @@ py-code-agent chat --model ollama/llama2   # local Ollama
 py-code-agent run "Create a Python script that prints the Fibonacci sequence"
 ```
 
-### 4. Start WebSocket Server
+### 4. Session Management (Tree/Branch)
+
+```bash
+# In chat mode, use slash commands:
+> /tree                    # View session tree structure
+> /fork "New branch name"  # Create a branch from current point
+> /switch <node-id>        # Switch to a different session node
+```
+
+### 5. Start WebSocket Server
 
 ```bash
 py-code-agent channel websocket --port 8080 --no-auth
+```
+
+### 6. JSON/RPC Mode (for programmatic access)
+
+```bash
+# JSON mode - output as JSON
+py-code-agent run --mode json "Fix the bug in main.py"
+
+# RPC mode - JSONL over stdin/stdout
+py-code-agent channel rpc --port 9000
 ```
 
 ## 🔧 Configuration
@@ -138,29 +161,55 @@ py-code-agent config set llm.model gpt-4 --local
 ```
 ┌─────────────────────────────────────────────────────────────┐
 │                        CLI Layer                            │
-│   chat │ run │ config │ plugin │ channel websocket          │
+│   chat │ run │ config │ plugin │ channel websocket/rpc     │
 └────────────────────────┬────────────────────────────────────┘
                          │
 ┌────────────────────────▼────────────────────────────────────┐
 │                      Core Layer                             │
-│   Agent (ReAct loop) → Session → Events → PluginManager    │
+│   Agent (ReAct loop) → Session Tree → Events (30+)         │
+│                              ↓                               │
+│                     PluginManager (5-layer repair)          │
 └──────────┬──────────────────────────┬───────────────────────┘
            │                          │
 ┌──────────▼──────────┐   ┌───────────▼───────────────────────┐
 │    LLM Layer        │   │         Plugin System             │
 │  LiteLLMProvider    │   │  Manager + 5-layer auto-repair    │
-│  stream/complete    │   │  Built-in + Local + Global + PyPI │
+│  stream/complete    │   │  30+ hooks across 6 categories    │
+│  cost tracking      │   │  Built-in + Local + Global + PyPI │
 └─────────────────────┘   └───────────┬───────────────────────┘
+                                      │
+                    ┌─────────────────┼───────────────────────┐
+                    │                 │                       │
+        ┌───────────▼──────┐ ┌────────▼───────┐  ┌──────────▼──────────┐
+        │  Extension APIs  │ │  Hook Events   │  │   Session Commands  │
+        │ register_command │ │ message_*      │  │ /tree /fork /switch │
+        │ register_shortcut│ │ tool_*_flow    │  │ session compression │
+        │ register_flag    │ │ session_tree   │  │ cost tracking       │
+        │ register_widget  │ │ model_switch   │  │                     │
+        └──────────────────┘ └────────────────┘  └─────────────────────┘
                                       │
 ┌─────────────────────────────────────▼───────────────────────┐
 │                    Tools + Channels                         │
 │  read_file │ write_file │ execute_bash │ task_done          │
-│  WebSocket │ CLI │ pluggable transports                    │
+│  WebSocket │ CLI │ JSON │ RPC │ pluggable transports       │
 │  MCP Gateway (10,000+ tools) │ A2A Protocol               │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 ## 🔌 Plugin System
+
+### Hook System (30+ Events)
+
+The plugin system now supports **30+ hook events** across 6 categories:
+
+| Category | Hooks | Description |
+|----------|-------|-------------|
+| **LifecycleHooks** | `before_session`, `after_session`, `before_turn`, `after_turn` | Session and turn lifecycle |
+| **MessageHooks** | `message_start`, `message_update`, `message_end` | Streaming message events |
+| **ToolHooks** | `tool_execution_start`, `tool_execution_update`, `tool_execution_end` | Tool execution flow |
+| **SessionHooks** | `before_tree`, `tree`, `before_fork`, `fork`, `before_switch`, `switch`, `before_compact`, `compacted` | Session tree operations |
+| **ModelHooks** | `model_select`, `before_model_switch`, `after_model_switch` | Model selection and switching |
+| **ExtensionHooks** | `register_commands`, `register_shortcuts`, `register_flags`, `register_widgets`, `register_providers` | Extension registration |
 
 ### Built-in Plugins
 
@@ -200,7 +249,7 @@ Plugins are loaded from four tiers (first match wins).
 
 ### Plugin Self-Healing
 
-5 layers of auto-repair.
+5 layers of auto-repair with **100% hook coverage** (30/30 hooks protected).
 
 | Layer | Scenario | Fix |
 |-------|----------|-----|
@@ -209,6 +258,8 @@ Plugins are loaded from four tiers (first match wins).
 | 3 | Import errors (missing packages) | `pip install` then retry |
 | 4 | Attribute errors | Inject missing attributes |
 | 5 | Tool `execute()` crashes | AST-patch source file + reload |
+
+**Coverage**: All 30 hooks across 6 categories are protected by the auto-repair system.
 
 ### CLI Plugin Management
 
@@ -246,11 +297,17 @@ This enables autonomous coding — the agent can write files, run tests, fix err
 
 ## 🌐 Channel System
 
-Channels provide pluggable transport for agent communication.
+Channels provide pluggable transport for agent communication with **4 modes**:
 
 ### CLI Channel
 
 Interactive terminal via `py-code-agent chat`.
+
+**Slash Commands:**
+- `/tree` - View session tree structure
+- `/fork <name>` - Create a branch from current point
+- `/switch <node-id>` - Switch to a different session node
+- `/compact` - Manually trigger context compression
 
 ### WebSocket Channel
 
@@ -266,6 +323,36 @@ Message format:
 Response:
 ```json
 { "type": "response", "content": "Hello! How can I help?", "status": "done" }
+```
+
+### JSON Mode
+
+For programmatic access with structured output:
+
+```bash
+py-code-agent run --mode json "Fix the bug in main.py"
+```
+
+Output:
+```json
+{
+  "thought": "I need to examine main.py first...",
+  "action": "read_file",
+  "observation": "...",
+  "final_answer": "Bug fixed!"
+}
+```
+
+### RPC Mode
+
+JSONL over stdin/stdout for embedding in other applications:
+
+```bash
+# Start RPC server
+py-code-agent channel rpc --port 9000
+
+# Or pipe commands
+echo '{"type": "message", "content": "Hello"}' | py-code-agent channel rpc
 ```
 
 ### Custom Channels

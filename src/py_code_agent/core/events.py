@@ -26,6 +26,33 @@ class EventType(str, Enum):
     # System events
     PING = "ping"
     PONG = "pong"
+    
+    # === Extended Events (对标 pi-coding-agent) ===
+    
+    # Message streaming events
+    MESSAGE_START = "message_start"
+    MESSAGE_UPDATE = "message_update"  # token-by-token
+    MESSAGE_END = "message_end"
+    
+    # Tool execution flow events
+    TOOL_EXECUTION_START = "tool_execution_start"
+    TOOL_EXECUTION_UPDATE = "tool_execution_update"  # streaming output
+    TOOL_EXECUTION_END = "tool_execution_end"
+    
+    # Session management events
+    SESSION_BEFORE_COMPACT = "session_before_compact"
+    SESSION_COMPACTED = "session_compacted"
+    SESSION_FORK = "session_fork"
+    SESSION_SWITCH = "session_switch"
+    SESSION_TREE = "session_tree"
+    
+    # Model & context events
+    MODEL_SELECT = "model_select"
+    CONTEXT_ACCESS = "context_access"
+    
+    # Agent turn events
+    TURN_START = "turn_start"
+    TURN_END = "turn_end"
 
 
 @dataclass

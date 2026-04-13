@@ -459,8 +459,9 @@ class Agent:
             content=system_content
         ))
         
-        # Add session messages
-        for msg in self.session.messages:
+        # Add session messages (using new tree-based context)
+        session_messages = self.session.get_current_context() if hasattr(self.session, 'get_current_context') else self.session.messages
+        for msg in session_messages:
             msg_kwargs = {}
             if msg["role"] == MessageRole.ASSISTANT and msg.get("tool_calls"):
                 msg_kwargs["tool_calls"] = msg["tool_calls"]
