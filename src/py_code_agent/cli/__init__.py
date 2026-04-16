@@ -1,6 +1,6 @@
 """CLI module."""
 
-from py_code_agent.cli.main import main
-from py_code_agent.cli.app import AgentApp
+# Avoid circular import by not importing main here
+# Import directly from modules when needed
 
-__all__ = ["main", "AgentApp"]
+__all__ = []

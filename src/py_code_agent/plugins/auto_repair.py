@@ -34,13 +34,43 @@ if TYPE_CHECKING:
     from py_code_agent.llm.litellm_provider import LiteLLMProvider
 
 _HOOK_METHODS: Set[str] = {
+    # ToolHooks
     "register_tools",
     "before_tool_execute",
     "after_tool_execute",
+    "enhance_tool_error",
+    "enhance_tool_error_priority",
+    # AgentHooks
     "on_agent_start",
     "on_agent_end",
     "on_llm_call",
     "on_llm_response",
+    "get_system_prompt",
+    "on_plugin_heartbeat",
+    "get_capabilities",
+    # StreamingHooks
+    "on_message_start",
+    "on_message_update",
+    "on_message_end",
+    "on_tool_execution_start",
+    "on_tool_execution_update",
+    "on_tool_execution_end",
+    # SessionHooks
+    "on_session_before_compact",
+    "on_session_compacted",
+    "on_session_fork",
+    "on_session_switch",
+    "on_session_tree",
+    # ModelHooks
+    "on_model_select",
+    "on_context_access",
+    # TurnHooks
+    "on_turn_start",
+    "on_turn_end",
+    # ExtensionHooks (registration hooks - less critical but include for completeness)
+    "register_commands",
+    "register_shortcuts",
+    "register_cli_flags",
 }
 
 _MAX_LLM_REPAIRS = 2

@@ -12,6 +12,7 @@ from py_code_agent.core.session import Session
 from py_code_agent.llm.litellm_provider import LiteLLMProvider, Message, MessageRole
 from py_code_agent.tools.base import ToolResult
 from py_code_agent.plugins.manager import PluginManager
+from py_code_agent.cli.commands import SessionCommands, CostTracker
 
 
 class Agent:
@@ -23,8 +24,12 @@ class Agent:
         self.agent_id = str(uuid.uuid4())
         self.session = Session()
         
-        # Initialize LLM provider
+        # Initialize session commands and cost tracker
         model = config.llm.model
+        self.session_commands = SessionCommands(self.session)
+        self.cost_tracker = CostTracker(model)
+        
+        # Initialize LLM provider
         # Prepend openai/ for OpenAI-compatible base URLs so LiteLLM routes correctly
         if config.llm.base_url and not any(model.startswith(p + "/") for p in ("openai", "azure", "anthropic", "cohere", "ollama", "mistral")):
             model = "openai/" + model
@@ -169,6 +174,12 @@ class Agent:
     
     async def run(self, input: str) -> AsyncIterator[Event]:
         """Run agent with input."""
+        # Check for session commands
+        if input.strip().startswith("/"):
+            async for event in self.session_commands.handle_command(input):
+                yield event
+            return
+        
         self.session.add_message(MessageRole.USER, input)
 
         yield Event(type=EventType.START, data={"input": input})
@@ -182,6 +193,13 @@ class Agent:
 
         while turn_count < max_turns:
             turn_count += 1
+            
+            # Start cost tracking for this turn
+            self.cost_tracker.start_turn()
+            
+            # Emit turn start event
+            yield Event(type=EventType.TURN_START, data={"turn": turn_count})
+            
             messages = self._prepare_messages()
             tools = self._prepare_tools()
 
@@ -199,11 +217,15 @@ class Agent:
             ):
                 if event.type == EventType.CONTENT:
                     assistant_content += event.data.get("content", "")
-                    yield event
+                    # Emit message update event for streaming
+                    yield Event(type=EventType.MESSAGE_UPDATE, data={"content": event.data.get("content", "")})
                 elif event.type == EventType.TOOL_CALL:
                     assistant_tool_calls.append(event.data)
+                    # Emit tool execution start event
+                    yield Event(type=EventType.TOOL_EXECUTION_START, data=event.data)
                 elif event.type == EventType.END:
-                    pass
+                    # Emit message end event
+                    yield Event(type=EventType.MESSAGE_END, data={})
 
             # ReAct mode: parse Thought/Action from content
             if react_enabled and assistant_content:
@@ -312,8 +334,19 @@ class Agent:
 
         if hasattr(self, "plugin_manager"):
             self.plugin_manager.call_on_agent_end()
-
-        yield Event(type=EventType.END, data={})
+        
+        # Emit turn end event
+        yield Event(type=EventType.TURN_END, data={"turn": turn_count})
+        
+        # Add cost summary to final event
+        cost_summary = self.cost_tracker.get_summary()
+        yield Event(
+            type=EventType.END, 
+            data={
+                "cost_summary": cost_summary,
+                "formatted": self.cost_tracker.format_summary()
+            }
+        )
     
     def _prepare_messages(self) -> List[Message]:
         """Prepare messages for LLM."""
@@ -459,8 +492,9 @@ class Agent:
             content=system_content
         ))
         
-        # Add session messages
-        for msg in self.session.messages:
+        # Add session messages (using new tree-based context)
+        session_messages = self.session.get_current_context() if hasattr(self.session, 'get_current_context') else self.session.messages
+        for msg in session_messages:
             msg_kwargs = {}
             if msg["role"] == MessageRole.ASSISTANT and msg.get("tool_calls"):
                 msg_kwargs["tool_calls"] = msg["tool_calls"]

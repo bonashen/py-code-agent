@@ -150,6 +150,126 @@ class AgentHooks:
         """
 
 
+# === Extended Hooks (对标 pi-coding-agent) ===
+
+class StreamingHooks:
+    """Message and tool streaming hooks."""
+
+    @hookspec
+    def on_message_start(self, message_id: str) -> None:
+        """Called when a new assistant message starts."""
+
+    @hookspec
+    def on_message_update(self, token: str, accumulated: str, message_id: str) -> None:
+        """Called for each token in streaming response."""
+
+    @hookspec
+    def on_message_end(self, content: str, message_id: str) -> None:
+        """Called when assistant message streaming completes."""
+
+    @hookspec
+    def on_tool_execution_start(self, tool_name: str, arguments: Dict[str, Any], tool_call_id: str) -> None:
+        """Called when tool execution starts."""
+
+    @hookspec
+    def on_tool_execution_update(self, tool_name: str, output: str, tool_call_id: str) -> None:
+        """Called for streaming tool output (e.g., bash stdout)."""
+
+    @hookspec
+    def on_tool_execution_end(self, tool_name: str, result: Any, tool_call_id: str) -> None:
+        """Called when tool execution completes."""
+
+
+class SessionHooks:
+    """Session management hooks."""
+
+    @hookspec
+    def on_session_before_compact(self, messages: List[Dict]) -> Optional[List[Dict]]:
+        """Called before session compaction. Can return custom compacted messages."""
+
+    @hookspec
+    def on_session_compacted(self, compacted_messages: List[Dict]) -> None:
+        """Called after session compaction."""
+
+    @hookspec
+    def on_session_fork(self, from_node_id: str, new_session_id: str) -> None:
+        """Called when session is forked."""
+
+    @hookspec
+    def on_session_switch(self, old_node_id: str, new_node_id: str) -> None:
+        """Called when switching to a different session node."""
+
+    @hookspec
+    def on_session_tree(self, tree_structure: Dict) -> None:
+        """Called when session tree is accessed."""
+
+
+class ModelHooks:
+    """Model selection and context hooks."""
+
+    @hookspec
+    def on_model_select(self, old_model: str, new_model: str, source: str) -> None:
+        """Called when model is switched (source: user/auto/fallback)."""
+
+    @hookspec
+    def on_context_access(self, messages: List[Dict]) -> Optional[List[Dict]]:
+        """Called when accessing context. Can filter/trim messages."""
+
+
+class TurnHooks:
+    """Agent turn hooks."""
+
+    @hookspec
+    def on_turn_start(self, turn_number: int, input: str) -> None:
+        """Called at the start of each agent turn."""
+
+    @hookspec
+    def on_turn_end(self, turn_number: int, output: str) -> None:
+        """Called at the end of each agent turn."""
+
+
+class ExtensionHooks:
+    """Extension registration hooks (对标 pi-coding-agent ExtensionAPI)."""
+
+    @hookspec
+    def register_commands(self) -> List[Dict[str, Any]]:
+        """Register slash commands. Return list of command definitions.
+        
+        Command definition format:
+        {
+            "name": "fork",
+            "description": "Create a branch from current session",
+            "handler": callable,
+            "parameters": [...]
+        }
+        """
+
+    @hookspec
+    def register_shortcuts(self) -> List[Dict[str, Any]]:
+        """Register keyboard shortcuts.
+        
+        Shortcut definition format:
+        {
+            "key": "ctrl+p",
+            "description": "Cycle models",
+            "handler": callable
+        }
+        """
+
+    @hookspec
+    def register_cli_flags(self) -> List[Dict[str, Any]]:
+        """Register CLI flags.
+        
+        Flag definition format:
+        {
+            "name": "--verbose",
+            "type": bool,
+            "default": False,
+            "description": "Enable verbose output"
+        }
+        """
+
+
 PLUGIN_DISCOVERY_PROMPT = """You are a plugin recommendation assistant. Given a user task and available plugins, recommend which plugins should be loaded.
 
 AVAILABLE PLUGINS:

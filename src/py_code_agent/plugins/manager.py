@@ -102,8 +102,14 @@ class PluginManager:
         disable_threshold: Optional[int] = None,
     ) -> None:
         self.pm = pluggy.PluginManager("py_code_agent")
+        # Register all hook specifications
         self.pm.add_hookspecs(hooks.ToolHooks)
         self.pm.add_hookspecs(hooks.AgentHooks)
+        self.pm.add_hookspecs(hooks.StreamingHooks)
+        self.pm.add_hookspecs(hooks.SessionHooks)
+        self.pm.add_hookspecs(hooks.ModelHooks)
+        self.pm.add_hookspecs(hooks.TurnHooks)
+        self.pm.add_hookspecs(hooks.ExtensionHooks)
 
         self._plugin_names: List[str] = []
         self._health: Dict[str, PluginHealth] = {}
